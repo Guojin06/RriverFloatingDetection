@@ -1,0 +1,32 @@
+# 训练参数
+batch_size: 16
+epochs: 100
+img_size: 640
+
+# 数据集配置
+train: dataset/processed/train/images
+val: dataset/processed/val/images
+
+# 类别配置
+nc: 1  # 类别数量
+names: ['floating_object']  # 类别名称
+
+# 优化器配置
+optimizer: SGD
+lr0: 0.01
+momentum: 0.937
+weight_decay: 0.0005
+
+# 数据增强
+hsv_h: 0.015
+hsv_s: 0.7
+hsv_v: 0.4
+degrees: 0.0
+translate: 0.1
+scale: 0.5
+shear: 0.0
+perspective: 0.0
+flipud: 0.0
+fliplr: 0.5
+mosaic: 1.0
+mixup: 0.0 

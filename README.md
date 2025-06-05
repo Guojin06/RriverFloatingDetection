@@ -1,95 +1,114 @@
-# 基于深度学习的河道漂浮物检测系统
+# 河流漂浮物检测系统
 
-## 项目简介
-本项目旨在开发一个基于深度学习的河道漂浮物检测系统，实现对河道视频流中的漂浮物自动检测、分类与定位，并通过Web界面进行展示和管理。
+基于 YOLOv5 和 FastAPI 的河流漂浮物智能检测系统。
 
-## 技术栈
-- **后端**：FastAPI（Python 3.8+）
-- **前端**：HTML + JavaScript（可后续引入Vue/React等）
-- **数据库**：MySQL 8.0.42
-- **数据库可视化**：HeidiSQL
-- **深度学习**：PyTorch/TensorFlow（可选，建议先用预训练模型）
+## 项目结构
 
-## 目录结构
 ```
-river-floating-object-detection/
-│
-├── backend/                # FastAPI后端
-│   ├── app/
-│   │   ├── main.py         # FastAPI入口
-│   │   ├── api/            # 路由
-│   │   ├── models/         # Pydantic模型
-│   │   ├── crud/           # 数据库操作
-│   │   ├── core/           # 配置、工具
-│   │   └── ml/             # 深度学习相关代码
-│   └── requirements.txt    # 后端依赖
-│
-├── frontend/               # 前端
-│   ├── static/             # 静态资源
-│   ├── templates/          # HTML模板
-│   └── app.js              # 前端逻辑
-│
-├── db/                     # 数据库相关
-│   ├── schema.sql          # 数据库表结构
-│   └── init.sql            # 初始化脚本
-│
-├── docs/                   # 文档
-│   └── README.md           # 项目说明
-│
-└── .gitignore
+├── backend/                # 后端代码
+│   ├── app/               # FastAPI 应用
+│   ├── config/            # 配置文件
+│   ├── dataset/           # 数据集目录
+│   ├── scripts/           # 工具脚本
+│   ├── tests/             # 测试代码
+│   └── yolov5/            # YOLOv5 子模块
+├── docs/                  # 项目文档
+└── README.md             # 项目说明
 ```
 
-## 开发计划
-1. **第一阶段**（1-2天）：需求分析、项目框架搭建、基础联通
-2. **第二阶段**（3-12天）：模型集成、API开发、前端初步实现、数据库设计
-3. **第三阶段**（13-15天）：系统优化、前端完善、文档与演示
+## 环境要求
 
-## 当前具体实施计划
-### 第一阶段（当前进行中，1-2天）
-- 明确需求和功能模块（如：用户管理、视频上传/流、检测结果展示、数据存储等）
-- 搭建项目基础框架（前后端、数据库初始化）
-- 完成最基础的"Hello World"级联通（前端能访问后端，后端能操作数据库）
-
-#### 具体分工建议
-- 组员A：负责后端FastAPI框架搭建，数据库连接测试
-- 组员B：负责前端HTML页面初步搭建，与后端接口联通测试
-- 组员C：负责MySQL数据库安装、表结构初步设计、HeidiSQL可视化配置
-
-### 第二阶段（3-12天）
-- 深度学习模型选型、训练与集成（可先用预训练模型做demo）
-- 完善后端API（如：上传视频、获取检测结果、用户管理等）
-- 前端初步页面开发（如：登录、上传、结果展示）
-- 数据库表结构设计与实现
-- 前后端联调，能跑通一个完整流程
-
-### 第三阶段（13-15天）
-- 优化模型与系统性能
-- 完善前端交互与美化
-- 增加日志、异常处理、权限等
-- 项目文档、部署、演示准备
+- Python 3.8+
+- CUDA 11.0+ (GPU 训练需要)
+- MySQL 8.0+
 
 ## 快速开始
 
-### 1. 后端启动
+1. 克隆仓库
 ```bash
+git clone https://github.com/Guojin06/RriverFloatingDetection.git
+cd RriverFloatingDetection
+```
+
+2. 安装依赖
+```bash
+# 创建虚拟环境
+python -m venv env
+source env/bin/activate  # Linux/Mac
+# 或
+.\env\Scripts\activate  # Windows
+
+# 安装依赖
+pip install -r backend/requirements.txt
+```
+
+3. 下载数据集
+```bash
+# 运行数据集下载脚本
+python backend/scripts/download_dataset.py
+```
+
+4. 启动服务
+```bash
+# 启动后端服务
 cd backend
-pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
-### 2. 前端启动
-直接用浏览器打开 `frontend/templates/index.html`，或用简单的HTTP服务器（如Python的http.server）。
+## 数据集说明
 
-### 3. 数据库
-- 安装MySQL 8.0.42
-- 用HeidiSQL导入 `db/schema.sql` 初始化表结构
+本项目使用的水面漂浮物数据集包含以下特点：
+- 总图片数：2400 张
+- 训练集：1920 张（80%）
+- 验证集：240 张（10%）
+- 测试集：240 张（10%）
 
-## 贡献说明
-- 代码规范：PEP8
-- 分支管理：feature/xxx
-- 提交信息：简明扼要
+数据集下载链接：[数据集下载地址]
+
+## 模型训练
+
+1. 准备数据集
+```bash
+# 运行数据预处理脚本
+python backend/scripts/voc2yolo.py
+```
+
+2. 开始训练
+```bash
+cd backend/yolov5
+python train.py --img 640 --batch 16 --epochs 100 --data ../config/dataset.yaml --weights yolov5s.pt
+```
+
+## API 文档
+
+启动服务后访问：http://localhost:8000/docs
+
+主要接口：
+- POST /api/detect：图像检测
+- GET /api/status：系统状态
+- POST /api/batch：批量检测
+
+## 开发文档
+
+详细文档请参考：
+- [环境配置与数据集准备](docs/blog_tutorial.md)
+- [模型训练与评估](docs/blog_tutorial.md#从零开始搭建河流漂浮物检测系统二模型训练与评估)
+- [API开发与系统集成](docs/blog_tutorial.md#从零开始搭建河流漂浮物检测系统三api开发与系统集成)
+
+## 贡献指南
+
+1. Fork 本仓库
+2. 创建特性分支
+3. 提交更改
+4. 推送到分支
+5. 创建 Pull Request
+
+## 许可证
+
+本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件
 
 ## 联系方式
-- 组员A
-- 组员B
-- 组员C 
+
+- 作者：郭金
+- 邮箱：your.email@example.com
+- GitHub：[Guojin06](https://github.com/Guojin06) 

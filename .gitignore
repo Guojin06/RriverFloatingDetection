@@ -24,6 +24,7 @@ wheels/
 # Virtual Environment
 venv/
 ENV/
+env/
 
 # IDE
 .idea/
@@ -31,17 +32,25 @@ ENV/
 *.swp
 *.swo
 
-# YOLOv5
-runs/
+# Project specific
+backend/dataset/raw/
+backend/dataset/processed/
+backend/runs/
 *.pt
 *.pth
 *.weights
+*.onnx
+*.engine
 
-# Dataset
-*.jpg
-*.jpeg
-*.png
-*.xml
-*.txt
-!requirements.txt
-!README.md
+# Logs
+*.log
+logs/
+
+# Local development
+.env
+.env.local
+.env.*.local
+
+# System
+.DS_Store
+Thumbs.db

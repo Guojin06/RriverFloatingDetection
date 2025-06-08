@@ -1,0 +1,94 @@
+.App {
+    text-align: center;
+    padding: 20px;
+  }
+
+body {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #232526 0%, #414345 100%);
+  background-image: url('https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=1500&q=80'),
+    linear-gradient(135deg, #232526 0%, #414345 100%);
+  background-blend-mode: overlay;
+  background-size: cover;
+  font-family: 'Roboto', 'PingFang SC', '微软雅黑', sans-serif;
+}
+
+input, .ant-input, .ant-btn {
+  border-radius: 16px !important;
+  font-size: 16px;
+}
+
+.ant-btn {
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(54,209,196,0.12);
+  background: linear-gradient(90deg, #36d1c4 0%, #5b86e5 100%) !important;
+  border: none !important;
+}
+
+.ant-table {
+  border-radius: 18px;
+  overflow: hidden;
+  background: rgba(30,34,54,0.92) !important;
+  color: #fff !important;
+  box-shadow: 0 4px 32px rgba(54,209,196,0.10);
+}
+
+.ant-table-thead > tr > th {
+  background: linear-gradient(90deg, #36d1c4 0%, #5b86e5 100%) !important;
+  color: #fff !important;
+  font-weight: bold;
+  text-align: center;
+  border-right: none !important;
+  font-size: 20px;
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+}
+
+.ant-table-tbody > tr > td {
+  text-align: center;
+  color: #fff !important;
+  font-size: 18px;
+}
+
+.ant-pagination {
+  margin: 24px 0 0 0 !important;
+  text-align: center;
+}
+.ant-pagination-item {
+  font-size: 18px !important;
+  font-weight: 600;
+  border-radius: 8px !important;
+  background: rgba(54,209,196,0.10) !important;
+  color: #36d1c4 !important;
+  margin: 0 4px !important;
+}
+.ant-pagination-item-active {
+  background: linear-gradient(90deg, #36d1c4 0%, #5b86e5 100%) !important;
+  color: #fff !important;
+  border: none !important;
+}
+.ant-pagination-prev .ant-pagination-item-link,
+.ant-pagination-next .ant-pagination-item-link {
+  color: #36d1c4 !important;
+  font-size: 22px !important;
+  border-radius: 8px !important;
+  background: rgba(54,209,196,0.10) !important;
+}
+
+.ant-btn, .ant-btn-dangerous {
+  margin-left: 8px;
+  margin-right: 8px;
+}
+
+.ant-btn > span, .ant-btn-dangerous > span {
+  margin-left: 6px;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  background: rgba(54,209,196,0.08);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(54,209,196,0.18);
+  border-radius: 8px;
+}

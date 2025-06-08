@@ -1,0 +1,8 @@
+进入虚拟环境指令：
+cd backend;
+./env/Scripts/Activate.ps1
+后端启动：
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+前端启动：
+cd frontend
+npm start --reload

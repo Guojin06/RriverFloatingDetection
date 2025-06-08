@@ -152,3 +152,79 @@ results.save('output/')
 
 ### 5. 标签文件为空
 - 检查 VOC->YOLO 转换脚本类别名是否与数据集一致 
+
+# 常见错误与解决手册（2024-06-05 晚）
+
+## 1. 数据库连接失败
+- **报错现象**：`Access denied for user ...` 或 `数据库连接失败！`
+- **常见原因**：
+  - 用户名/密码错误
+  - 用户没有远程访问权限
+  - 数据库主机、端口配置错误
+- **解决方法**：
+  1. 检查 `.env` 文件或 `config/database.py`，确保用户名、密码、主机、端口正确。
+  2. 用 HeidiSQL 等工具确认远程能连上。
+  3. 如需远程访问，MySQL 用户需授权：
+     ```sql
+     GRANT ALL PRIVILEGES ON 数据库名.* TO '用户名'@'%' IDENTIFIED BY '密码';
+     FLUSH PRIVILEGES;
+     ```
+  4. 若密码被环境变量覆盖，优先以 `.env` 文件为准，或直接在代码里写死调试。
+
+## 2. cryptography 包安装失败/进程占用
+- **报错现象**：`WinError 32`、`cryptography package is required for sha256_password...`、pip 安装卡死
+- **常见原因**：
+  - pip 临时文件被杀毒/系统占用
+  - 认证方式为 caching_sha2_password
+- **解决方法**：
+  1. 彻底关闭所有 Python/IDE/资源管理器/杀毒软件
+  2. 清空 `C:\Users\用户名\AppData\Local\Temp` 和 pip 缓存
+  3. 用管理员权限 PowerShell，设置临时目录：
+     ```powershell
+     $env:TEMP = "D:\piptemp"
+     $env:TMP = "D:\piptemp"
+     pip install cryptography --no-cache-dir
+     ```
+  4. **推荐**：将 MySQL 用户认证方式改为 mysql_native_password，避免依赖 cryptography：
+     ```sql
+     ALTER USER '用户名'@'%' IDENTIFIED WITH mysql_native_password BY '密码';
+     FLUSH PRIVILEGES;
+     ```
+
+## 3. FastAPI Swagger UI `Failed to fetch`/CORS 问题
+- **报错现象**：Swagger UI 调用接口报 `Failed to fetch`，提示 CORS/Network Failure
+- **解决方法**：
+  1. 在 `main.py` 添加 CORS 中间件：
+     ```python
+     from fastapi.middleware.cors import CORSMiddleware
+     app.add_middleware(
+         CORSMiddleware,
+         allow_origins=["*"],
+         allow_credentials=True,
+         allow_methods=["*"],
+         allow_headers=["*"],
+     )
+     ```
+  2. 重启 FastAPI 服务，刷新 Swagger 页面
+
+## 4. 环境变量/配置优先级混乱
+- **现象**：实际连接信息与预期不符
+- **解决方法**：
+  1. 优先检查 `.env` 文件内容
+  2. 检查系统环境变量（PowerShell 用 `$env:MYSQL_PASSWORD` 查看）
+  3. 代码调试时可直接写死参数
+
+## 5. Python 包导入失败（如 `ModuleNotFoundError: No module named 'config'`）
+- **解决方法**：
+  - 在脚本开头加：
+    ```python
+    import sys, os
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    ```
+
+---
+
+如遇到其他问题，建议：
+- 先用最小脚本测试数据库连接
+- 逐步排查环境变量、依赖、端口、网络
+- 记录每一步的报错和日志，便于定位 

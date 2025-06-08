@@ -190,7 +190,7 @@ if __name__ == '__main__':
 
 ---
 
-> 下一篇我们将详细介绍数据预处理和模型训练的具体实现，敬请期待！
+> 下一篇我们将详细介绍数据预处理和模型训练的具体实现，敬请期待！ 
 
 # 从零开始搭建河流漂浮物检测系统（二）：模型训练与评估
 
@@ -506,6 +506,182 @@ tensorboard --logdir runs/train
 
 ### 5. 标签文件为空
 - 检查 VOC->YOLO 转换脚本类别名是否与数据集一致
+
+---
+
+> 下一篇我们将详细介绍API开发的具体实现，包括RESTful接口设计、数据库集成等内容，敬请期待！
+
+# 从零开始搭建河流漂浮物检测系统（四）：API设计与前端页面开发
+
+## 目录
+- [一、API设计](#一api设计)
+  - [1. 接口规划](#1-接口规划)
+  - [2. 数据模型设计](#2-数据模型设计)
+  - [3. 认证与授权](#3-认证与授权)
+- [二、前端页面开发](#二前端页面开发)
+  - [1. 页面规划](#1-页面规划)
+  - [2. 技术选型](#2-技术选型)
+  - [3. 页面实现](#3-页面实现)
+- [三、系统集成](#三系统集成)
+  - [1. 前后端对接](#1-前后端对接)
+  - [2. 文件存储系统](#2-文件存储系统)
+  - [3. 日志系统](#3-日志系统)
+- [四、系统测试](#四系统测试)
+  - [1. 单元测试](#1-单元测试)
+  - [2. 接口测试](#2-接口测试)
+  - [3. 性能测试](#3-性能测试)
+- [五、部署准备](#五部署准备)
+  - [1. 环境配置](#1-环境配置)
+  - [2. 容器化部署](#2-容器化部署)
+  - [3. 监控系统](#3-监控系统)
+- [六、参考资源](#六参考资源)
+
+## 一、API设计
+
+### 1. 接口规划
+- 图像上传接口
+- 检测结果返回接口
+- 批量处理接口
+
+### 2. 数据模型设计
+- 设计数据模型，包括输入和输出格式
+
+### 3. 认证与授权
+- 实现用户认证和权限管理
+
+## 二、前端页面开发
+
+### 1. 页面规划
+- 登录/注册页面
+- 视频上传页面
+- 检测结果展示页面
+- 用户管理页面
+- 日志管理页面
+
+### 2. 技术选型
+- 使用React框架
+- 使用Ant Design组件库
+- 使用Axios进行API调用
+
+### 3. 页面实现
+- 登录/注册页面
+- 视频上传页面
+- 检测结果展示页面
+- 用户管理页面
+- 日志管理页面
+
+## 三、系统集成
+
+### 1. 前后端对接
+- 实现前后端通信，确保数据交互
+
+### 2. 文件存储系统
+- 实现文件上传和存储功能
+
+### 3. 日志系统
+- 实现日志记录和分析功能
+
+## 四、系统测试
+
+### 1. 单元测试
+- 编写单元测试，确保代码质量
+
+### 2. 接口测试
+- 使用工具或脚本，测试API接口功能
+
+### 3. 性能测试
+- 使用工具或脚本，测试API性能指标
+
+## 五、部署准备
+
+### 1. 环境配置
+- 配置服务器环境，确保系统运行
+
+### 2. 容器化部署
+- 使用容器技术，实现系统部署
+
+### 3. 监控系统
+- 实现系统监控和告警功能
+
+## 六、参考资源
+
+1. [YOLOv5训练指南](https://github.com/ultralytics/yolov5/wiki/Train-Custom-Data)
+2. [PyTorch文档](https://pytorch.org/docs/stable/index.html)
+3. [FastAPI文档](https://fastapi.tiangolo.com/)
+4. [项目GitHub仓库](https://github.com/Guojin06/RriverFloatingDetection.git)
+
+# 前端表单提交与 FastAPI 后端 Form 参数对接实战
+
+## 1. 场景说明
+
+FastAPI 后端接口如果参数用 `Form(...)`，前端必须用表单格式（FormData 或 x-www-form-urlencoded）提交，不能用 JSON，否则会报 422 Unprocessable Entity。
+
+**后端示例：**
+```python
+from fastapi import Form
+
+@app.post("/api/login")
+def login(username: str = Form(...), password: str = Form(...)):
+    ...
+```
+
+## 2. 前端 axios 正确写法
+
+```js
+const onFinish = async (values) => {
+  setLoading(true);
+  try {
+    // 用 FormData 兼容 FastAPI Form 参数
+    const formData = new FormData();
+    formData.append('username', values.username);
+    formData.append('password', values.password);
+    const response = await axios.post('http://localhost:8000/api/login', formData);
+    message.success('登录成功！');
+  } catch (error) {
+    message.error('登录失败，请检查用户名和密码！');
+  } finally {
+    setLoading(false);
+  }
+};
+```
+
+## 3. 常见错误
+
+- 直接用 axios.post(url, values)（默认 JSON），会导致 422 错误。
+- 后端用 Form，前端必须用表单格式。
+
+## 4. 对比：表单参数 vs. schemes（Pydantic JSON）
+
+| 风格         | 后端参数写法                  | 前端提交方式                | 适用场景           |
+|--------------|------------------------------|-----------------------------|--------------------|
+| 表单 Form    | username: str = Form(...)    | FormData/x-www-form-urlencoded | 传统表单、兼容性好 |
+| schemes(JSON)| user: UserLogin (Pydantic)   | application/json            | RESTful、接口规范   |
+
+**schemes.py 示例：**
+```python
+from pydantic import BaseModel
+class UserLogin(BaseModel):
+    username: str
+    password: str
+```
+
+**接口示例：**
+```python
+@app.post("/api/login")
+def login(user: UserLogin):
+    ...
+```
+
+**前端 axios：**
+```js
+axios.post(url, { username, password }); // 直接 JSON
+```
+
+## 5. 错误排查与经验总结
+
+- 遇到 422 错误，优先检查前后端参数格式是否一致。
+- 表单参数用 FormData，JSON参数用 Pydantic schemes。
+- 建议文档和代码都注明接口参数格式，便于前后端协作。
 
 ---
 

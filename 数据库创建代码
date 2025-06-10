@@ -1,0 +1,190 @@
+CREATE DATABASE river_floating_detection
+DEFAULT CHARACTER SET utf8mb4
+DEFAULT COLLATE utf8mb4_0900_ai_ci;
+USE `river_floating_detection`;
+
+-- 1. 删除旧表（有外键约束要按顺序删）
+DROP TABLE IF EXISTS detection_results;
+DROP TABLE IF EXISTS videos;
+DROP TABLE IF EXISTS images;
+DROP TABLE IF EXISTS logs;
+DROP TABLE IF EXISTS users;
+
+-- 2. 创建新表
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(100) NOT NULL,
+    role VARCHAR(20) DEFAULT 'user',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE images (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    image_path VARCHAR(255) NOT NULL,
+    upload_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status VARCHAR(20) DEFAULT 'pending',
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TABLE detection_results (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    image_id INT,
+    result_json TEXT,
+    detected_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (image_id) REFERENCES images(id)
+);
+
+CREATE TABLE logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    action VARCHAR(255),
+    action_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- 插入管理员
+INSERT INTO users (username, password, role) VALUES ('admin', 'admin123', 'admin');
+
+-- 插入普通用户
+INSERT INTO users (username, password, role) VALUES ('user1', 'user123', 'user');
+INSERT INTO users (username, password, role) VALUES ('user2', 'user456', 'user');
+
+-- 插入测试视频
+INSERT INTO videos (user_id, video_path, status) VALUES (2, '/data/videos/river1.mp4', 'pending');
+INSERT INTO videos (user_id, video_path, status) VALUES (3, '/data/videos/river2.mp4', 'done');
+
+-- 插入检测结果
+INSERT INTO detection_results (video_id, result_json) VALUES (1, '{"objects": [{"type": "plastic", "confidence": 0.95, "bbox": [100, 200, 150, 250]}]}');
+INSERT INTO detection_results (video_id, result_json) VALUES (2, '{"objects": [{"type": "wood", "confidence": 0.88, "bbox": [50, 120, 80, 160]}]}');
+
+-- 创建管理员账户
+CREATE USER 'admin'@'localhost' IDENTIFIED BY '123456';
+GRANT ALL PRIVILEGES ON river_floating_detection.* TO 'admin_user'@'localhost';
+
+-- 创建普通用户账户
+CREATE USER 'normal_user'@'localhost' IDENTIFIED BY '123456';
+GRANT SELECT, INSERT ON river_floating_detection.videos TO 'normal_user'@'localhost';
+GRANT SELECT, INSERT ON river_floating_detection.detection_results TO 'normal_user'@'localhost';
+GRANT SELECT ON river_floating_detection.users TO 'normal_user'@'localhost';
+
+-- 查看已有用户
+SELECT user, host FROM mysql.user;
+
+-- 如果已存在，先删除
+DROP USER IF EXISTS 'admin'@'localhost';
+DROP USER IF EXISTS 'normal'@'localhost';
+
+-- 创建新用户
+CREATE USER 'admin'@'localhost' IDENTIFIED BY '123456';
+CREATE USER 'normal'@'localhost' IDENTIFIED BY '123456';
+
+-- 授权
+GRANT ALL PRIVILEGES ON river_floating_detection.* TO 'admin'@'localhost';
+GRANT SELECT, INSERT ON river_floating_detection.videos TO 'normal'@'localhost';
+GRANT SELECT, INSERT ON river_floating_detection.detection_results TO 'normal'@'localhost';
+GRANT SELECT ON river_floating_detection.users TO 'normal'@'localhost';
+
+-- 刷新权限
+FLUSH PRIVILEGES;
+
+river_floating_detection
+CREATE VIEW user_videos AS
+SELECT u.id AS user_id, u.username, v.id AS video_id, v.video_path, v.upload_time, v.status
+FROM users u
+JOIN videos v ON u.id = v.user_id;
+
+INSERT INTO users (username, password, role) VALUES (NULL, 'test123', 'user');  -- 违反非空约束
+INSERT INTO users (username, password, role) VALUES ('admin', 'test123', 'admin');  -- 违反唯一性约束
+
+INSERT INTO videos (user_id, video_path, status) VALUES (1, '/data/river.mp4', 'unknown');  -- 违反CHECK约束
+
+记录SELECT * FROM `information_schema`.`COLUMNS` WHERE TABLE_SCHEMA='river_floating_detection' AND TABLE_NAME='logs' ORDER BY ORDINAL_POSITION;
+SHOW INDEXES FROM `logs` FROM `river_floating_detection`;
+SELECT * FROM information_schema.REFERENTIAL_CONSTRAINTS WHERE   CONSTRAINT_SCHEMA='river_floating_detection'   AND TABLE_NAME='logs'   AND REFERENCED_TABLE_NAME IS NOT NULL;
+SELECT * FROM information_schema.KEY_COLUMN_USAGE WHERE   TABLE_SCHEMA='river_floating_detection'   AND TABLE_NAME='logs'   AND REFERENCED_TABLE_NAME IS NOT NULL;
+SHOW CREATE TABLE `river_floating_detection`.`logs`;
+SELECT tc.CONSTRAINT_NAME, cc.CHECK_CLAUSE FROM `information_schema`.`CHECK_CONSTRAINTS` AS cc, `information_schema`.`TABLE_CONSTRAINTS` AS tc WHERE tc.CONSTRAINT_SCHEMA='river_floating_detection' AND tc.TABLE_NAME='logs' AND tc.CONSTRAINT_TYPE='CHECK' AND tc.CONSTRAINT_SCHEMA=cc.CONSTRAINT_SCHEMA AND tc.CONSTRAINT_NAME=cc.CONSTRAINT_NAME;
+SELECT * FROM `river_floating_detection`.`logs` LIMIT 1000;
+SELECT * FROM `information_schema`.`COLUMNS` WHERE TABLE_SCHEMA='river_floating_detection' AND TABLE_NAME='images' ORDER BY ORDINAL_POSITION;
+SHOW INDEXES FROM `images` FROM `river_floating_detection`;
+SELECT * FROM information_schema.REFERENTIAL_CONSTRAINTS WHERE   CONSTRAINT_SCHEMA='river_floating_detection'   AND TABLE_NAME='images'   AND REFERENCED_TABLE_NAME IS NOT NULL;
+SELECT * FROM information_schema.KEY_COLUMN_USAGE WHERE   TABLE_SCHEMA='river_floating_detection'   AND TABLE_NAME='images'   AND REFERENCED_TABLE_NAME IS NOT NULL;
+SHOW CREATE TABLE `river_floating_detection`.`images`;
+SELECT tc.CONSTRAINT_NAME, cc.CHECK_CLAUSE FROM `information_schema`.`CHECK_CONSTRAINTS` AS cc, `information_schema`.`TABLE_CONSTRAINTS` AS tc WHERE tc.CONSTRAINT_SCHEMA='river_floating_detection' AND tc.TABLE_NAME='images' AND tc.CONSTRAINT_TYPE='CHECK' AND tc.CONSTRAINT_SCHEMA=cc.CONSTRAINT_SCHEMA AND tc.CONSTRAINT_NAME=cc.CONSTRAINT_NAME;
+SELECT * FROM `river_floating_detection`.`images` LIMIT 1000;
+SELECT * FROM `information_schema`.`COLUMNS` WHERE TABLE_SCHEMA='river_floating_detection' AND TABLE_NAME='detection_results' ORDER BY ORDINAL_POSITION;
+SHOW INDEXES FROM `detection_results` FROM `river_floating_detection`;
+SELECT * FROM information_schema.REFERENTIAL_CONSTRAINTS WHERE   CONSTRAINT_SCHEMA='river_floating_detection'   AND TABLE_NAME='detection_results'   AND REFERENCED_TABLE_NAME IS NOT NULL;
+SELECT * FROM information_schema.KEY_COLUMN_USAGE WHERE   TABLE_SCHEMA='river_floating_detection'   AND TABLE_NAME='detection_results'   AND REFERENCED_TABLE_NAME IS NOT NULL;
+SHOW CREATE TABLE `river_floating_detection`.`detection_results`;
+SELECT tc.CONSTRAINT_NAME, cc.CHECK_CLAUSE FROM `information_schema`.`CHECK_CONSTRAINTS` AS cc, `information_schema`.`TABLE_CONSTRAINTS` AS tc WHERE tc.CONSTRAINT_SCHEMA='river_floating_detection' AND tc.TABLE_NAME='detection_results' AND tc.CONSTRAINT_TYPE='CHECK' AND tc.CONSTRAINT_SCHEMA=cc.CONSTRAINT_SCHEMA AND tc.CONSTRAINT_NAME=cc.CONSTRAINT_NAME;
+SELECT  `id`,  `image_id`, LEFT(`result_json`, 256),  `detected_at` FROM `river_floating_detection`.`detection_results` LIMIT 1000;
+SELECT * FROM `information_schema`.`COLUMNS` WHERE TABLE_SCHEMA='river_floating_detection' AND TABLE_NAME='users' ORDER BY ORDINAL_POSITION;
+SHOW INDEXES FROM `users` FROM `river_floating_detection`;
+SELECT * FROM information_schema.REFERENTIAL_CONSTRAINTS WHERE   CONSTRAINT_SCHEMA='river_floating_detection'   AND TABLE_NAME='users'   AND REFERENCED_TABLE_NAME IS NOT NULL;
+SELECT * FROM information_schema.KEY_COLUMN_USAGE WHERE   TABLE_SCHEMA='river_floating_detection'   AND TABLE_NAME='users'   AND REFERENCED_TABLE_NAME IS NOT NULL;
+SHOW CREATE TABLE `river_floating_detection`.`users`;
+SELECT tc.CONSTRAINT_NAME, cc.CHECK_CLAUSE FROM `information_schema`.`CHECK_CONSTRAINTS` AS cc, `information_schema`.`TABLE_CONSTRAINTS` AS tc WHERE tc.CONSTRAINT_SCHEMA='river_floating_detection' AND tc.TABLE_NAME='users' AND tc.CONSTRAINT_TYPE='CHECK' AND tc.CONSTRAINT_SCHEMA=cc.CONSTRAINT_SCHEMA AND tc.CONSTRAINT_NAME=cc.CONSTRAINT_NAME;
+SELECT * FROM `river_floating_detection`.`users` LIMIT 1000;
+SELECT * FROM `information_schema`.`COLUMNS` WHERE TABLE_SCHEMA='river_floating_detection' AND TABLE_NAME='user_videos' ORDER BY ORDINAL_POSITION;
+SHOW INDEXES FROM `user_videos` FROM `river_floating_detection`;
+SELECT * FROM information_schema.REFERENTIAL_CONSTRAINTS WHERE   CONSTRAINT_SCHEMA='river_floating_detection'   AND TABLE_NAME='user_videos'   AND REFERENCED_TABLE_NAME IS NOT NULL;
+SELECT * FROM information_schema.KEY_COLUMN_USAGE WHERE   TABLE_SCHEMA='river_floating_detection'   AND TABLE_NAME='user_videos'   AND REFERENCED_TABLE_NAME IS NOT NULL;
+SELECT CURRENT_USER();
+SHOW CREATE VIEW `river_floating_detection`.`user_videos`;
+SELECT CAST(LOAD_FILE(CONCAT(IFNULL(@@GLOBAL.datadir, CONCAT(@@GLOBAL.basedir, 'data/')), 'river_floating_detection/user_videos.frm')) AS CHAR CHARACTER SET utf8);
+SHOW CREATE TABLE `river_floating_detection`.`logs`;
+SELECT * FROM `river_floating_detection`.`logs` LIMIT 1000;
+SELECT CURRENT_USER();
+SHOW CREATE VIEW `river_floating_detection`.`user_videos`;
+SELECT CAST(LOAD_FILE(CONCAT(IFNULL(@@GLOBAL.datadir, CONCAT(@@GLOBAL.basedir, 'data/')), 'river_floating_detection/user_videos.frm')) AS CHAR CHARACTER SET utf8);
+SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
+DROP VIEW `user_videos`;
+SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
+SHOW DATABASES;
+SELECT `DEFAULT_COLLATION_NAME` FROM `information_schema`.`SCHEMATA` WHERE `SCHEMA_NAME`='river_floating_detection';
+SHOW TABLE STATUS FROM `river_floating_detection`;
+SHOW FUNCTION STATUS WHERE `Db`='river_floating_detection';
+SHOW PROCEDURE STATUS WHERE `Db`='river_floating_detection';
+SHOW TRIGGERS FROM `river_floating_detection`;
+SELECT *, EVENT_SCHEMA AS `Db`, EVENT_NAME AS `Name` FROM information_schema.`EVENTS` WHERE `EVENT_SCHEMA`='river_floating_detection';
+/* 表节点 "user_videos" 在树中未发现。 */
+/* 进入会话 "test" */
+SELECT * FROM `information_schema`.`COLUMNS` WHERE TABLE_SCHEMA='river_floating_detection' AND TABLE_NAME='detection_results' ORDER BY ORDINAL_POSITION;
+SHOW INDEXES FROM `detection_results` FROM `river_floating_detection`;
+SELECT * FROM information_schema.REFERENTIAL_CONSTRAINTS WHERE   CONSTRAINT_SCHEMA='river_floating_detection'   AND TABLE_NAME='detection_results'   AND REFERENCED_TABLE_NAME IS NOT NULL;
+SELECT * FROM information_schema.KEY_COLUMN_USAGE WHERE   TABLE_SCHEMA='river_floating_detection'   AND TABLE_NAME='detection_results'   AND REFERENCED_TABLE_NAME IS NOT NULL;
+SHOW CREATE TABLE `river_floating_detection`.`detection_results`;
+SELECT tc.CONSTRAINT_NAME, cc.CHECK_CLAUSE FROM `information_schema`.`CHECK_CONSTRAINTS` AS cc, `information_schema`.`TABLE_CONSTRAINTS` AS tc WHERE tc.CONSTRAINT_SCHEMA='river_floating_detection' AND tc.TABLE_NAME='detection_results' AND tc.CONSTRAINT_TYPE='CHECK' AND tc.CONSTRAINT_SCHEMA=cc.CONSTRAINT_SCHEMA AND tc.CONSTRAINT_NAME=cc.CONSTRAINT_NAME;
+SELECT * FROM `information_schema`.`COLUMNS` WHERE TABLE_SCHEMA='river_floating_detection' AND TABLE_NAME='images' ORDER BY ORDINAL_POSITION;
+SHOW INDEXES FROM `images` FROM `river_floating_detection`;
+SELECT * FROM information_schema.REFERENTIAL_CONSTRAINTS WHERE   CONSTRAINT_SCHEMA='river_floating_detection'   AND TABLE_NAME='images'   AND REFERENCED_TABLE_NAME IS NOT NULL;
+SELECT * FROM information_schema.KEY_COLUMN_USAGE WHERE   TABLE_SCHEMA='river_floating_detection'   AND TABLE_NAME='images'   AND REFERENCED_TABLE_NAME IS NOT NULL;
+SHOW CREATE TABLE `river_floating_detection`.`images`;
+SELECT tc.CONSTRAINT_NAME, cc.CHECK_CLAUSE FROM `information_schema`.`CHECK_CONSTRAINTS` AS cc, `information_schema`.`TABLE_CONSTRAINTS` AS tc WHERE tc.CONSTRAINT_SCHEMA='river_floating_detection' AND tc.TABLE_NAME='images' AND tc.CONSTRAINT_TYPE='CHECK' AND tc.CONSTRAINT_SCHEMA=cc.CONSTRAINT_SCHEMA AND tc.CONSTRAINT_NAME=cc.CONSTRAINT_NAME;
+SELECT * FROM `river_floating_detection`.`images` LIMIT 1000;
+SELECT * FROM `information_schema`.`COLUMNS` WHERE TABLE_SCHEMA='river_floating_detection' AND TABLE_NAME='logs' ORDER BY ORDINAL_POSITION;
+SHOW INDEXES FROM `logs` FROM `river_floating_detection`;
+SELECT * FROM information_schema.REFERENTIAL_CONSTRAINTS WHERE   CONSTRAINT_SCHEMA='river_floating_detection'   AND TABLE_NAME='logs'   AND REFERENCED_TABLE_NAME IS NOT NULL;
+SELECT * FROM information_schema.KEY_COLUMN_USAGE WHERE   TABLE_SCHEMA='river_floating_detection'   AND TABLE_NAME='logs'   AND REFERENCED_TABLE_NAME IS NOT NULL;
+SHOW CREATE TABLE `river_floating_detection`.`logs`;
+SELECT tc.CONSTRAINT_NAME, cc.CHECK_CLAUSE FROM `information_schema`.`CHECK_CONSTRAINTS` AS cc, `information_schema`.`TABLE_CONSTRAINTS` AS tc WHERE tc.CONSTRAINT_SCHEMA='river_floating_detection' AND tc.TABLE_NAME='logs' AND tc.CONSTRAINT_TYPE='CHECK' AND tc.CONSTRAINT_SCHEMA=cc.CONSTRAINT_SCHEMA AND tc.CONSTRAINT_NAME=cc.CONSTRAINT_NAME;
+SELECT * FROM `river_floating_detection`.`logs` LIMIT 1000;
+SELECT * FROM `information_schema`.`COLUMNS` WHERE TABLE_SCHEMA='river_floating_detection' AND TABLE_NAME='users' ORDER BY ORDINAL_POSITION;
+SHOW INDEXES FROM `users` FROM `river_floating_detection`;
+SELECT * FROM information_schema.REFERENTIAL_CONSTRAINTS WHERE   CONSTRAINT_SCHEMA='river_floating_detection'   AND TABLE_NAME='users'   AND REFERENCED_TABLE_NAME IS NOT NULL;
+SELECT * FROM information_schema.KEY_COLUMN_USAGE WHERE   TABLE_SCHEMA='river_floating_detection'   AND TABLE_NAME='users'   AND REFERENCED_TABLE_NAME IS NOT NULL;
+SHOW CREATE TABLE `river_floating_detection`.`users`;
+SELECT tc.CONSTRAINT_NAME, cc.CHECK_CLAUSE FROM `information_schema`.`CHECK_CONSTRAINTS` AS cc, `information_schema`.`TABLE_CONSTRAINTS` AS tc WHERE tc.CONSTRAINT_SCHEMA='river_floating_detection' AND tc.TABLE_NAME='users' AND tc.CONSTRAINT_TYPE='CHECK' AND tc.CONSTRAINT_SCHEMA=cc.CONSTRAINT_SCHEMA AND tc.CONSTRAINT_NAME=cc.CONSTRAINT_NAME;
+SELECT * FROM `river_floating_detection`.`users` LIMIT 1000;
+SHOW CREATE TABLE `river_floating_detection`.`logs`;
+SELECT * FROM `river_floating_detection`.`logs` LIMIT 1000;
+SHOW CREATE TABLE `river_floating_detection`.`images`;
+SELECT * FROM `river_floating_detection`.`images` LIMIT 1000;
+SHOW CREATE TABLE `river_floating_detection`.`detection_results`;
+SELECT  `id`,  `image_id`, LEFT(`result_json`, 256),  `detected_at` FROM `river_floating_detection`.`detection_results` LIMIT 1000;
+SHOW CREATE TABLE `river_floating_detection`.`images`;
+SHOW CREATE TABLE `river_floating_detection`.`logs`;
+SHOW CREATE TABLE `river_floating_detection`.`users`;

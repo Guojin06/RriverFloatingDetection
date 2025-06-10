@@ -8,9 +8,9 @@ import os#os模块用于获取环境变量
 load_dotenv()#加载环境变量,从.env文件中获取
 
 # 数据库配置（使用远程MySQL配置）
-MYSQL_USER = os.getenv("MYSQL_USER", "remote_user")
+MYSQL_USER = os.getenv("MYSQL_USER", "root")
 MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "123456")  
-MYSQL_HOST = os.getenv("MYSQL_HOST", "10.201.120.113")
+MYSQL_HOST = os.getenv("MYSQL_HOST", "localhost")
 MYSQL_PORT = os.getenv("MYSQL_PORT", "3306")
 MYSQL_DATABASE = os.getenv("MYSQL_DATABASE", "river_floating_detection")#数据库名称，getenv获取环境变量
 

@@ -1,19 +1,19 @@
 import sys
-import os
+import os#os是python中的一个模块，用于操作文件和目录
 YOLOV5_DIR = os.path.join(os.path.dirname(__file__), "../yolov5")
 sys.path.append(YOLOV5_DIR)
 sys.path.append(os.path.abspath(os.path.join(YOLOV5_DIR, "..")))  # 加入 backend 目录
 
 from fastapi import FastAPI, File, UploadFile, Depends, HTTPException, Form
 from fastapi.responses import JSONResponse
-from typing import List, Optional#List和Optional是Python的类型注解，用于指定变量类型
+from typing import List, Optional
 from PIL import Image
 import torch
 import io
 import os
 from config.database import SessionLocal, get_db
 from sqlalchemy.orm import Session
-from app.models import User, Video, Log, DetectionResult  # 修正导入路径
+from app.models import User, Image as ImageModel, Log, DetectionResult
 from fastapi.middleware.cors import CORSMiddleware
 import shutil
 from datetime import datetime
@@ -21,6 +21,7 @@ import numpy as np
 from yolov5.utils.general import non_max_suppression, scale_boxes, check_img_size
 from yolov5.models.common import DetectMultiBackend
 from yolov5.utils.torch_utils import select_device
+from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
 
@@ -34,30 +35,27 @@ app.add_middleware(
 )
 
 # 加载模型（修正路径）
-MODEL_PATH = "runs/train/gpu_run/weights/best.pt"
+MODEL_PATH ="runs/multi_class_run5/weights/best.pt"
 
 # 使用 YOLOv5 官方推荐方式加载模型
 from yolov5.models.common import DetectMultiBackend
 from yolov5.utils.torch_utils import select_device
 
-# 选择设备
 device = select_device('cpu')  # 或 'cuda:0' 如果有 GPU
 
-# 加载模型
 if os.path.exists(MODEL_PATH):
     model = DetectMultiBackend(MODEL_PATH, device=device)
 else:
     model = DetectMultiBackend(os.path.join(YOLOV5_DIR, 'yolov5s.pt'), device=device)
 
-# 设置推理参数
 stride = int(model.stride)
 imgsz = check_img_size(640, s=stride)  # 检查图片大小
-
-# 预热模型
 model.warmup(imgsz=(1, 3, imgsz, imgsz))
 
-VIDEOS_DIR = os.path.join(os.path.dirname(__file__), "../videos")
-os.makedirs(VIDEOS_DIR, exist_ok=True)
+IMAGES_DIR = os.path.join(os.path.dirname(__file__), "../images")
+os.makedirs(IMAGES_DIR, exist_ok=True)
+
+app.mount("/images", StaticFiles(directory=IMAGES_DIR), name="images")
 
 @app.get("/")
 def read_root():
@@ -79,7 +77,7 @@ def register(username: str = Form(...), password: str = Form(...), db: Session =
     return {"user_id": new_user.id, "username": new_user.username, "role": new_user.role}
 
 @app.post("/api/login")
-def login(username: str = Form(...), password: str = Form(...), db: Session = Depends(get_db)):
+def login(username: str = Form(...), password: str = Form(...), db: Session = Depends(get_db)):#Form是fastapi中的一个类，用于处理表单数据
     """
     用户登录接口
     """
@@ -123,117 +121,92 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="用户不存在")
-    # 删除用户相关视频和日志
-    db.query(Video).filter(Video.user_id == user_id).delete()
+    # 删除用户相关图片和日志
+    db.query(ImageModel).filter(ImageModel.user_id == user_id).delete()
     db.query(Log).filter(Log.user_id == user_id).delete()
     db.delete(user)
     db.commit()
     return {"msg": "User deleted"}
 
-# 2. 视频相关接口
-@app.post("/api/videos/upload")
-def upload_video(user_id: int = Form(...), file: UploadFile = File(...), db: Session = Depends(get_db)):
+# 图片相关接口
+@app.post("/api/images/upload")
+def upload_image(user_id: int = Form(...), file: UploadFile = File(...), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="用户不存在")
     filename = f"{user_id}_{file.filename}"
-    save_path = os.path.join(VIDEOS_DIR, filename)
+    save_path = os.path.join(IMAGES_DIR, filename)
     with open(save_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-    video = Video(user_id=user_id, video_path=filename, status="pending")
-    db.add(video)
+    image = ImageModel(user_id=user_id, image_path=filename, status="pending")
+    db.add(image)
     db.commit()
-    db.refresh(video)
-    # 上传视频成功后
-    log = Log(user_id=user_id, action="upload_video", action_time=datetime.utcnow())
+    db.refresh(image)
+    log = Log(user_id=user_id, action="upload_image", action_time=datetime.utcnow())#Log是app/models.py中的一个类，用于记录用户操作
     db.add(log)
     db.commit()
-    return {"video_id": video.id, "video_path": filename, "status": video.status}
+    return {"image_id": image.id, "image_path": filename, "status": image.status}
 
-@app.get("/api/videos/{video_id}")
-def get_video(video_id: int, db: Session = Depends(get_db)):
-    video = db.query(Video).filter(Video.id == video_id).first()
-    if not video:
-        raise HTTPException(status_code=404, detail="视频不存在")
-    return {"video_id": video.id, "user_id": video.user_id, "video_path": video.video_path, "upload_time": str(video.upload_time), "status": video.status}
+@app.get("/api/images/{image_id}")
+def get_image(image_id: int, db: Session = Depends(get_db)):
+    image = db.query(ImageModel).filter(ImageModel.id == image_id).first()
+    if not image:
+        raise HTTPException(status_code=404, detail="图片不存在")
+    return {"image_id": image.id, "user_id": image.user_id, "image_path": image.image_path, "upload_time": str(image.upload_time), "status": image.status}
 
-@app.get("/api/videos/user/{user_id}")
-def get_user_videos(user_id: int, db: Session = Depends(get_db)):
-    videos = db.query(Video).filter(Video.user_id == user_id).all()
-    return [{"video_id": v.id, "video_path": v.video_path, "upload_time": str(v.upload_time), "status": v.status} for v in videos]
+@app.get("/api/images/user/{user_id}")
+def get_user_images(user_id: int, db: Session = Depends(get_db)):
+    images = db.query(ImageModel).filter(ImageModel.user_id == user_id).all()
+    return [{"image_id": img.id, "image_path": img.image_path, "upload_time": str(img.upload_time), "status": img.status} for img in images]
 
-@app.delete("/api/videos/{video_id}")
-def delete_video(video_id: int, db: Session = Depends(get_db)):
-    video = db.query(Video).filter(Video.id == video_id).first()
-    if not video:
-        raise HTTPException(status_code=404, detail="视频不存在")
-    # 删除本地文件
-    file_path = os.path.join(VIDEOS_DIR, video.video_path)
+@app.delete("/api/images/{image_id}")
+def delete_image(image_id: int, db: Session = Depends(get_db)):
+    image = db.query(ImageModel).filter(ImageModel.id == image_id).first()
+    if not image:
+        raise HTTPException(status_code=404, detail="图片不存在")
+    file_path = os.path.join(IMAGES_DIR, image.image_path)
     if os.path.exists(file_path):
         os.remove(file_path)
-    db.delete(video)
+    db.delete(image)
     db.commit()
-    return {"msg": "Video deleted"}
+    return {"msg": "Image deleted"}
 
-# 3. 检测相关接口
+# 检测相关接口
 @app.post("/api/detect/image")
-async def detect_image(file: UploadFile = File(...), db: Session = Depends(get_db)):
+async def detect_image(image_id: int = Form(...), user_id: int = Form(...), file: UploadFile = File(...), db: Session = Depends(get_db)):
     image_bytes = await file.read()
     img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-    
-    # 预处理图像
-    img = np.array(img)
-    img = img.transpose(2, 0, 1)  # HWC to CHW
-    img = np.ascontiguousarray(img)
-    img = torch.from_numpy(img).to(device)
-    img = img.float()  # uint8 to fp16/32
-    img /= 255.0  # 0 - 255 to 0.0 - 1.0
-    if img.ndimension() == 3:
-        img = img.unsqueeze(0)
-
-    # 推理
-    pred = model(img, augment=False, visualize=False)
-    
-    # NMS
+    img_np = np.array(img)
+    img_tensor = img_np.transpose(2, 0, 1)  # HWC to CHW
+    img_tensor = np.ascontiguousarray(img_tensor)
+    img_tensor = torch.from_numpy(img_tensor).to(device)
+    img_tensor = img_tensor.float()
+    img_tensor /= 255.0
+    if img_tensor.ndimension() == 3:
+        img_tensor = img_tensor.unsqueeze(0)
+    pred = model(img_tensor, augment=False, visualize=False)
     pred = non_max_suppression(pred, 0.25, 0.45, None, False, max_det=1000)
-    
     detections = []
     for i, det in enumerate(pred):
         if len(det):
-            # 将坐标从 img_size 缩放到 img0 大小
-            det[:, :4] = scale_boxes(img.shape[2:], det[:, :4], img.shape).round()
-            
-            # 处理检测结果
+            det[:, :4] = scale_boxes(img_tensor.shape[2:], det[:, :4], img_tensor.shape).round()
             for *xyxy, conf, cls in reversed(det):
                 detections.append({
-                    "box": [round(x, 2) for x in xyxy],
+                    "box": [round(float(x), 2) for x in xyxy],
                     "confidence": round(float(conf), 3),
                     "class": int(cls),
                     "class_name": model.names[int(cls)]
                 })
-
     # 存储检测结果
-    det_result = DetectionResult(video_id=None, result_json=str(detections), detected_at=datetime.utcnow())
+    det_result = DetectionResult(image_id=image_id, result_json=str(detections), detected_at=datetime.utcnow())
     db.add(det_result)
     db.commit()
     db.refresh(det_result)
+    # 写入日志
+    log = Log(user_id=user_id, action="detect_image", action_time=datetime.utcnow())
+    db.add(log)
+    db.commit()
     return {"result_id": det_result.id, "detections": detections}
-
-@app.post("/api/detect/video")
-def detect_video(video_id: int, db: Session = Depends(get_db)):
-    video = db.query(Video).filter(Video.id == video_id).first()
-    if not video:
-        raise HTTPException(status_code=404, detail="视频不存在")
-    # 这里只做mock，实际应异步处理视频帧检测
-    # 假设检测完毕，写入检测结果
-    fake_result = [{"box": [0,0,100,100], "confidence": 0.9, "class": 0, "class_name": "floating_object"}]
-    det_result = DetectionResult(video_id=video_id, result_json=str(fake_result), detected_at=datetime.utcnow())
-    db.add(det_result)
-    db.commit()
-    db.refresh(det_result)
-    video.status = "processed"
-    db.commit()
-    return {"result_id": det_result.id, "status": "processed"}
 
 @app.get("/api/detection_results/{result_id}")
 def get_detection_result(result_id: int, db: Session = Depends(get_db)):
@@ -242,16 +215,16 @@ def get_detection_result(result_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="检测结果不存在")
     return {
         "result_id": result.id,
-        "video_id": result.video_id,
+        "image_id": result.image_id,
         "result_json": result.result_json,
         "detected_at": str(result.detected_at)
     }
 
-@app.get("/api/detection_results/video/{video_id}")
-def get_video_detection_results(video_id: int, db: Session = Depends(get_db)):
-    results = db.query(DetectionResult).filter(DetectionResult.video_id == video_id).all()
+@app.get("/api/detection_results/image/{image_id}")
+def get_image_detection_results(image_id: int, db: Session = Depends(get_db)):
+    results = db.query(DetectionResult).filter(DetectionResult.image_id == image_id).all()
     return [
-        {"result_id": r.id, "result_json": r.result_json, "detected_at": str(r.detected_at)} for r in results
+        {"result_id": r.id, "image_id": r.image_id, "result_json": r.result_json, "detected_at": str(r.detected_at)} for r in results
     ]
 
 # 4. 日志相关接口
@@ -259,7 +232,7 @@ def get_video_detection_results(video_id: int, db: Session = Depends(get_db)):
 def get_user_logs(user_id: int, db: Session = Depends(get_db)):
     logs = db.query(Log).filter(Log.user_id == user_id).all()
     return [
-        {"id": l.id, "action": l.action, "action_time": str(l.action_time)} for l in logs
+        {"id": l.id, "user_id": l.user_id, "action": l.action, "action_time": str(l.action_time)} for l in logs
     ]
 
 @app.post("/api/logs")

@@ -4,12 +4,12 @@ epochs: 100
 img_size: 640
 
 # 数据集配置
-train: dataset/processed/train/images
-val: dataset/processed/val/images
+train: D:/pythontest/Detection of floating objects in rivers/backend/dataset/processed/train/images
+val: D:/pythontest/Detection of floating objects in rivers/backend/dataset/processed/val/images
 
 # 类别配置
-nc: 1  # 类别数量
-names: ['floating_object']  # 类别名称
+nc: 8  # 类别数量
+names: ['bottle', 'milk-box', 'ball', 'plastic-bag', 'plastic-garbage', 'leaf', 'branch', 'grass']  # 类别名称
 
 # 优化器配置
 optimizer: SGD

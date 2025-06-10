@@ -1,46 +1,44 @@
 import React from 'react';
 import { Menu } from 'antd';
-import { UserOutlined, VideoCameraOutlined, FileTextOutlined, LogoutOutlined, BarsOutlined } from '@ant-design/icons';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { UserOutlined, FileTextOutlined, LogoutOutlined, BarsOutlined, UploadOutlined } from '@ant-design/icons';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import './SideNav.css';
 
 const menuItems = [
-  { key: '/upload', icon: <VideoCameraOutlined />, label: '视频上传' },
-  { key: '/results', icon: <FileTextOutlined />, label: '检测结果' },
-  { key: '/users', icon: <UserOutlined />, label: '用户管理' },
-  { key: '/logs', icon: <BarsOutlined />, label: '日志管理' },
-  { key: 'logout', icon: <LogoutOutlined />, label: '退出登录' },
+  { key: '/image-detect', icon: <UploadOutlined />, label: <Link to="/image-detect">图片检测</Link> },
+  { key: '/results', icon: <FileTextOutlined />, label: <Link to="/results">检测结果</Link> },
+  { key: '/users', icon: <UserOutlined />, label: <Link to="/users">用户管理</Link> },
+  { key: '/logs', icon: <BarsOutlined />, label: <Link to="/logs">日志管理</Link> },
 ];
 
 const SideNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
-
-  const handleClick = (e) => {
-    if (e.key === 'logout') {
-      localStorage.removeItem('user_id');
-      window.location.href = '/login';
-    } else {
-      navigate(e.key);
-    }
-  };
+  const selectedKey = menuItems.find(item => location.pathname.startsWith(item.key))?.key || '/image-detect';
 
   return (
     <div className="side-nav-tech">
-      <div className="logo-tech">河流漂浮物检测</div>
+      <div className="logo-tech">河流检测</div>
       <Menu
-        theme="dark"
         mode="inline"
-        selectedKeys={[location.pathname]}
-        onClick={handleClick}
+        theme="dark"
+        selectedKeys={[selectedKey]}
+        style={{ width: '100%', background: 'transparent', border: 'none', flex: 1 }}
         items={menuItems}
-        style={{
-          background: 'transparent',
-          border: 'none',
-          fontSize: 18,
-          fontWeight: 500,
-          color: '#fff',
-          marginTop: 24
+        onClick={({ key }) => navigate(key)}
+      />
+      <Menu
+        mode="inline"
+        theme="dark"
+        style={{ width: '100%', background: 'transparent', border: 'none', marginTop: 'auto' }}
+        items={[
+          { key: 'logout', icon: <LogoutOutlined />, label: '退出登录' }
+        ]}
+        onClick={({ key }) => {
+          if (key === 'logout') {
+            localStorage.removeItem('user_id');
+            window.location.reload();
+          }
         }}
       />
     </div>

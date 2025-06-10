@@ -10,7 +10,7 @@ body {
     linear-gradient(135deg, #232526 0%, #414345 100%);
   background-blend-mode: overlay;
   background-size: cover;
-  font-family: 'Roboto', 'PingFang SC', '微软雅黑', sans-serif;
+  font-family: 'Roboto', 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
 }
 
 input, .ant-input, .ant-btn {

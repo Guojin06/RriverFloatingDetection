@@ -4,7 +4,7 @@ from shutil import copy2, rmtree
 
 # VOC类别名（根据实际数据集修改）
 CLASSES = [
-    "bottle"  # 修改为实际的类别名称
+    'bottle', 'milk-box', 'ball', 'plastic-bag', 'plastic-garbage', 'leaf', 'branch', 'grass'
 ]
 
 # 路径配置

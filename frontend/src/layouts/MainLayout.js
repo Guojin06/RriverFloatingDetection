@@ -1,10 +1,10 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import SideNav from './SideNav';
-import VideoUpload from '../pages/VideoUpload';
 import DetectionResults from '../pages/DetectionResults';
 import UserManagement from '../pages/UserManagement';
 import LogManagement from '../pages/LogManagement';
+import ImageDetect from '../pages/ImageDetect';
 
 const MainLayout = () => {
   return (
@@ -24,11 +24,11 @@ const MainLayout = () => {
         marginTop: 32
       }}>
         <Routes>
-          <Route path="/upload" element={<VideoUpload />} />
+          <Route path="/image-detect" element={<ImageDetect />} />
           <Route path="/results" element={<DetectionResults />} />
           <Route path="/users" element={<UserManagement />} />
           <Route path="/logs" element={<LogManagement />} />
-          <Route path="*" element={<Navigate to="/upload" />} />
+          <Route path="*" element={<Navigate to="/image-detect" />} />
         </Routes>
       </div>
     </div>

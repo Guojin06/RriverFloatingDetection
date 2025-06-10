@@ -1,0 +1,25 @@
+.ant-table-thead > tr > th {
+  background: linear-gradient(90deg, #36d1c4 0%, #5b86e5 100%) !important;
+  color: #fff !important;
+  font-weight: bold;
+}
+
+/* 自定义分页器输入框样式 */
+.custom-pagination-wrapper .ant-pagination-simple-pager input {
+  background: rgba(54,209,196,0.10) !important;
+  border-radius: 16px !important;
+  border: none !important;
+  color: #36d1c4 !important;
+  font-size: 20px !important;
+  text-align: center !important;
+  width: 48px !important;
+  height: 32px !important;
+  box-shadow: 0 2px 8px rgba(54,209,196,0.08);
+  margin: 0 4px !important;
+}
+
+.custom-pagination-wrapper .ant-pagination-simple-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+} 

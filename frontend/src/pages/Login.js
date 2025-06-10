@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Form, Input, Button, Typography, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
+import './Login.css';
 
 const { Title } = Typography;
 const API_BASE = process.env.REACT_APP_API_BASE;
@@ -57,9 +58,9 @@ const Login = ({ onLogin }) => {
       backgroundBlendMode: 'overlay',
     }}>
       <div style={{
-        width: 420,
-        padding: '48px 40px 40px 40px',
-        borderRadius: 28,
+        width: 340,
+        padding: '32px 28px 28px 28px',
+        borderRadius: 18,
         background: 'rgba(34, 40, 49, 0.82)',
         boxShadow: '0 8px 32px 0 rgba(54,209,196,0.18)',
         backdropFilter: 'blur(8px)',
@@ -67,44 +68,77 @@ const Login = ({ onLogin }) => {
         flexDirection: 'column',
         alignItems: 'center',
       }}>
-        <Title level={2} style={{ textAlign: 'center', marginBottom: 36, color: '#36d1c4', fontWeight: 700, letterSpacing: 2, fontFamily: 'Roboto, sans-serif', textShadow: '0 2px 8px #0004' }}>河流漂浮物检测系统</Title>
-        <Form onFinish={handleFinish} style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }} layout="vertical">
-          <Form.Item name="username" rules={[{ required: true, message: '请输入用户名！' }]} style={{ marginBottom: 28, width: '100%' }}>
-            <Input prefix={<UserOutlined style={{ marginRight: 8, color: '#36d1c4' }} />} placeholder="用户名" size="large" style={inputStyle}
+        <Title level={2} style={{ textAlign: 'center', marginBottom: 24, color: '#36d1c4', fontWeight: 700, letterSpacing: 2, fontFamily: 'Roboto, sans-serif', textShadow: '0 2px 8px #0004', fontSize: 22 }}>河流漂浮物检测系统</Title>
+        <Form
+          onFinish={handleFinish}
+          className="login-form-center"
+          style={{ width: '100%', maxWidth: 280, margin: '0 auto' }}
+          layout="vertical"
+        >
+          <Form.Item name="username" rules={[{ required: true, message: '请输入用户名！' }]} style={{ width: '100%', marginBottom: 20 }}>
+            <Input
+              prefix={<UserOutlined style={{ color: '#36d1c4', fontSize: 20 }} />}
+              placeholder="用户名"
+              size="large"
+              style={{
+                background: 'rgba(255,255,255,0.85)',
+                borderRadius: 12,
+                border: 'none',
+                color: '#232526',
+                fontSize: 16,
+                boxShadow: 'none',
+                height: 40,
+                width: '100%',
+                paddingLeft: 36,
+                paddingRight: 12,
+                marginBottom: 0
+              }}
               autoComplete="username"
               allowClear={false}
               bordered={false}
             />
           </Form.Item>
-          <Form.Item name="password" rules={[{ required: true, message: '请输入密码！' }]} style={{ marginBottom: 32, width: '100%' }}>
-            <Input.Password prefix={<LockOutlined style={{ marginRight: 8, color: '#36d1c4' }} />} placeholder="密码" size="large" style={inputStyle}
+          <Form.Item name="password" rules={[{ required: true, message: '请输入密码！' }]} style={{ width: '100%', marginBottom: 22 }}>
+            <Input.Password
+              prefix={<LockOutlined style={{ color: '#36d1c4', fontSize: 20 }} />}
+              placeholder="密码"
+              size="large"
+              style={{
+                background: 'rgba(255,255,255,0.85)',
+                borderRadius: 12,
+                border: 'none',
+                color: '#232526',
+                fontSize: 16,
+                boxShadow: 'none',
+                height: 40,
+                width: '100%',
+                paddingLeft: 36,
+                paddingRight: 12,
+                marginBottom: 0
+              }}
               autoComplete="current-password"
               allowClear={false}
               bordered={false}
             />
           </Form.Item>
-          <Form.Item style={{ marginBottom: 0, width: '100%', display: 'flex', justifyContent: 'center' }}>
-            <Button type="primary" htmlType="submit" size="large" loading={loading}
+          <Form.Item style={{ width: '100%', marginBottom: 0 }}>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={loading}
+              className="login-btn"
               style={{
-                borderRadius: 24,
+                width: '100%',
+                borderRadius: 12,
                 background: 'linear-gradient(90deg, #36d1c4 0%, #5b86e5 100%)',
                 border: 'none',
-                fontWeight: 'bold',
-                fontSize: 22,
-                letterSpacing: 2,
-                boxShadow: '0 4px 24px 0 #36d1c4cc, 0 0 16px 2px #5b86e5cc',
-                width: 180,
-                transition: 'box-shadow 0.2s',
-                textAlign: 'center',
-                display: 'block',
-                margin: '0 auto',
-                filter: loading ? 'brightness(0.8)' : 'none',
+                fontWeight: 700,
+                fontSize: 16,
+                height: 40,
+                boxShadow: '0 2px 8px rgba(54,209,196,0.12)',
+                marginTop: 8
               }}
-              onMouseOver={e => e.currentTarget.style.boxShadow = '0 0 32px 4px #36d1c4cc, 0 0 32px 8px #5b86e5cc'}
-              onMouseOut={e => e.currentTarget.style.boxShadow = '0 4px 24px 0 #36d1c4cc, 0 0 16px 2px #5b86e5cc'}
-            >
-              登 录
-            </Button>
+            >登 录</Button>
           </Form.Item>
         </Form>
       </div>

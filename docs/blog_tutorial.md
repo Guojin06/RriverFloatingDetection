@@ -16,6 +16,15 @@
 - [三、下一步计划](#三下一步计划)
 - [四、参考资源](#四参考资源)
 
+## 新增补充内容目录
+
+- [项目总览与结构说明](#项目总览与结构说明)
+- [FastAPI后端API设计与实现](#fastapi后端api设计与实现)
+- [前后端联调与系统集成](#前后端联调与系统集成)
+- [推理部署与效果展示](#推理部署与效果展示)
+- [API测试与自动化验证](#api测试与自动化验证)
+- [常见问题与优化建议（FAQ）](#常见问题与优化建议faq)
+
 ## 一、开发环境配置
 
 ### 1. Python环境
@@ -686,3 +695,52 @@ axios.post(url, { username, password }); // 直接 JSON
 ---
 
 > 下一篇我们将详细介绍API开发的具体实现，包括RESTful接口设计、数据库集成等内容，敬请期待！ 
+
+# YOLOv5多类别目标检测训练全流程详解
+
+## 1. 原理简介
+YOLOv5 是一种端到端的单阶段目标检测算法，支持多类别检测。其核心思想是将图片划分为网格，每个网格预测边界框和类别概率，最终输出所有目标的位置和类别。
+
+## 2. 数据集准备
+- VOC格式数据集，包含多种类别（如 bottle、milk-box、ball、plastic-bag、plastic-garbage、leaf、branch、grass）。
+- 标签转换脚本自动统计所有类别，生成多类别YOLO格式标签。
+- 数据集划分为 train/val/test。
+
+## 3. 训练配置
+- 配置文件示例：
+  ```yaml
+  train: D:/.../train/images
+  val: D:/.../val/images
+  nc: 8
+  names: ['bottle', 'milk-box', 'ball', 'plastic-bag', 'plastic-garbage', 'leaf', 'branch', 'grass']
+  batch_size: 4
+  epochs: 100
+  img_size: 640
+  ```
+
+## 4. 训练命令
+```bash
+python yolov5/train.py --img 640 --batch 4 --epochs 100 --data config/training_config.yaml --weights yolov5/yolov5s.pt --device 0 --project runs --name multi_class_run
+```
+
+## 5. 训练过程
+- 数据加载、增强、前向传播、损失计算、反向传播、验证评估、保存权重。
+- 每轮遍历所有训练图片一次，100轮即所有图片训练100次。
+
+## 6. 训练结果
+- best.pt：最优模型权重
+- results.png：训练曲线
+- labels.jpg：标签分布
+- mAP、Precision、Recall等指标
+
+## 7. 检测效果
+- 支持多类别目标检测，前端友好展示类别、置信度、坐标。
+
+## 8. 常见问题
+- 显存不足：减小batch size
+- 检测不全：检查类别配置和标签
+- 训练慢：用更轻量模型或减少epochs
+
+---
+
+> 这样你就能完整复现和理解YOLOv5多类别目标检测的训练全过程！ 

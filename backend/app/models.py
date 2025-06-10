@@ -10,26 +10,26 @@ class User(Base):
     password = Column(String(100), nullable=False)
     role = Column(String(20), default='user')
     created_at = Column(DateTime, default=datetime.utcnow)
-    videos = relationship('Video', back_populates='user')
+    images = relationship('Image', back_populates='user')
     logs = relationship('Log', back_populates='user')
 
-class Video(Base):
-    __tablename__ = 'videos'
+class Image(Base):
+    __tablename__ = 'images'
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey('users.id'))
-    video_path = Column(String(255), nullable=False)
+    image_path = Column(String(255), nullable=False)
     upload_time = Column(DateTime, default=datetime.utcnow)
     status = Column(String(20), default='pending')
-    user = relationship('User', back_populates='videos')
-    detection_results = relationship('DetectionResult', back_populates='video')
+    user = relationship('User', back_populates='images')
+    detection_results = relationship('DetectionResult', back_populates='image')
 
 class DetectionResult(Base):
     __tablename__ = 'detection_results'
     id = Column(Integer, primary_key=True, index=True)
-    video_id = Column(Integer, ForeignKey('videos.id'))
+    image_id = Column(Integer, ForeignKey('images.id'))
     result_json = Column(Text, nullable=False)
     detected_at = Column(DateTime, default=datetime.utcnow)
-    video = relationship('Video', back_populates='detection_results')
+    image = relationship('Image', back_populates='detection_results')
 
 class Log(Base):
     __tablename__ = 'logs'

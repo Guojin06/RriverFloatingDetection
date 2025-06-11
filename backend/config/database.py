@@ -7,24 +7,15 @@ import os#os模块用于获取环境变量
 # 加载环境变量
 load_dotenv()#加载环境变量,从.env文件中获取
 
-# 数据库配置（使用远程MySQL配置）
-MYSQL_USER = os.getenv("MYSQL_USER", "root")
-MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "123456")  
-MYSQL_HOST = os.getenv("MYSQL_HOST", "localhost")
-MYSQL_PORT = os.getenv("MYSQL_PORT", "3306")
-MYSQL_DATABASE = os.getenv("MYSQL_DATABASE", "river_floating_detection")#数据库名称，getenv获取环境变量
-
-# 创建数据库URL（使用pymysql作为驱动）
-SQLALCHEMY_DATABASE_URL = f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DATABASE}?charset=utf8mb4"
+# 数据库连接配置
+SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:123456@localhost:3306/river_floating_detection?charset=utf8mb4"
 
 # 创建数据库引擎
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
     pool_pre_ping=True,  # 自动处理断开的连接
-    pool_recycle=600,   # 缩短回收连接时间
-    echo=True,           # 打印SQL语句（开发环境使用）
-    pool_size=2,         # 连接池大小
-    max_overflow=5      # 最大溢出连接数
+    pool_recycle=3600,   # 连接回收时间
+    echo=True            # 打印SQL语句（开发环境使用）
 )
 
 # 创建会话工厂
@@ -41,8 +32,8 @@ def get_db():
     finally:
         db.close()
 
-print("MYSQL_USER:", MYSQL_USER)
-print("MYSQL_PASSWORD:", MYSQL_PASSWORD)
-print("MYSQL_HOST:", MYSQL_HOST)
-print("MYSQL_PORT:", MYSQL_PORT)
-print("MYSQL_DATABASE:", MYSQL_DATABASE) 
+print("MYSQL_USER:", SQLALCHEMY_DATABASE_URL)
+print("MYSQL_PASSWORD:", SQLALCHEMY_DATABASE_URL)
+print("MYSQL_HOST:", SQLALCHEMY_DATABASE_URL)
+print("MYSQL_PORT:", SQLALCHEMY_DATABASE_URL)
+print("MYSQL_DATABASE:", SQLALCHEMY_DATABASE_URL) 
